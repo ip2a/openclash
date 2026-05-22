@@ -1,0 +1,29 @@
+{
+  "name": "openclash",
+  "version": "0.1.0",
+  "description": "openclash CLI entry package; loads the matching prebuilt platform binary",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ip2a/openclash"
+  },
+  "bin": {
+    "openclash": "bin/openclash.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "optionalDependencies": {
+    "openclash-bin-linux-x64-musl": "0.1.0",
+    "openclash-bin-linux-arm64-musl": "0.1.0",
+    "openclash-bin-darwin-arm64": "0.1.0",
+    "openclash-bin-win32-ia32": "0.1.0"
+  },
+  "keywords": [
+    "clash",
+    "mihomo",
+    "proxy",
+    "cli"
+  ]
+}

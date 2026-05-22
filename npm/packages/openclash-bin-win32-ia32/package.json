@@ -1,0 +1,20 @@
+{
+  "name": "openclash-bin-win32-ia32",
+  "version": "0.1.0",
+  "description": "openclash prebuilt binary for Windows x86",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ip2a/openclash"
+  },
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "ia32"
+  ],
+  "files": [
+    "bin",
+    "README.md"
+  ]
+}

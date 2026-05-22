@@ -1,0 +1,77 @@
+name: release-publish-npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: "Run ID of the release-build workflow"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Sync versions
+        run: uv run python scripts/sync_version.py
+
+      - name: Validate npm package metadata
+        run: |
+          uv run python - <<'PY'
+          import json
+          from pathlib import Path
+
+          expected = "https://github.com/ip2a/openclash"
+          for pkg in sorted(Path("npm/packages").glob("*/package.json")):
+              data = json.loads(pkg.read_text(encoding="utf-8"))
+              url = (data.get("repository") or {}).get("url")
+              if url != expected:
+                  raise SystemExit(f"Invalid repository.url in {pkg}: {url!r}, expected {expected!r}")
+          print("[ok] All npm package repository URLs are aligned")
+          PY
+
+      - name: Download release-build artifacts
+        run: |
+          mkdir -p dist
+          gh run download "${{ inputs.build_run_id }}" --name "openclash-linux-x64-musl" --dir "dist/linux-x64-musl"
+          gh run download "${{ inputs.build_run_id }}" --name "openclash-linux-arm64-musl" --dir "dist/linux-arm64-musl"
+          gh run download "${{ inputs.build_run_id }}" --name "openclash-darwin-arm64" --dir "dist/darwin-arm64"
+          gh run download "${{ inputs.build_run_id }}" --name "openclash-win32-ia32" --dir "dist/win32-ia32"
+
+      - name: Assemble npm platform packages
+        run: uv run python scripts/assemble_npm_packages.py --dist-root dist
+
+      - name: Publish npm platform packages
+        run: |
+          for pkg in openclash-bin-linux-x64-musl openclash-bin-linux-arm64-musl openclash-bin-darwin-arm64 openclash-bin-win32-ia32; do
+            (
+              cd "npm/packages/${pkg}"
+              npm publish --access public --provenance
+            )
+          done
+
+      - name: Publish npm main package
+        run: |
+          cd npm/packages/openclash
+          npm publish --access public --provenance

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openclash"
+version = "0.1.0"
+description = "openclash CLI entry package; loads the matching prebuilt platform binary"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+  "openclash-bin-linux-x64-musl==0.1.0; platform_system == 'Linux' and platform_machine == 'x86_64'",
+  "openclash-bin-linux-arm64-musl==0.1.0; platform_system == 'Linux' and (platform_machine == 'aarch64' or platform_machine == 'arm64')",
+  "openclash-bin-darwin-arm64==0.1.0; platform_system == 'Darwin' and platform_machine == 'arm64'",
+  "openclash-bin-win32-ia32==0.1.0; platform_system == 'Windows' and (platform_machine == 'x86' or platform_machine == 'i386' or platform_machine == 'i686')",
+]
+
+[project.urls]
+Homepage = "https://github.com/ip2a/openclash"
+Repository = "https://github.com/ip2a/openclash"
+
+[project.scripts]
+openclash = "openclash.__main__:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

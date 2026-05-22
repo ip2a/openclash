@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openclash-bin-win32-ia32"
+version = "0.1.0"
+description = "openclash prebuilt binary for Windows x86"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/ip2a/openclash"
+Repository = "https://github.com/ip2a/openclash"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+openclash_bin_win32_ia32 = ["bin/openclash.exe"]

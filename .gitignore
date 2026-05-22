@@ -1,0 +1,83 @@
+# Default deny: ignore everything, then allow only source files and release metadata.
+*
+
+# Allow directory traversal for whitelisted content.
+!/
+!/.github/
+!/.github/workflows/
+!/npm/
+!/npm/packages/
+!/python/
+!/python/packages/
+!/resources/
+!/resources/zip/
+!/scripts/
+!/src/
+!/src/tui/
+!/tests/
+
+# Top-level project files to keep in Git.
+!/.gitignore
+!/Cargo.toml
+!/Cargo.lock
+!/build.rs
+!/README.md
+!/LICENSE
+!/ARCHITECTURE.md
+!/FEATURES.md
+!/checksums.txt
+
+# GitHub workflows.
+!/.github/workflows/*.yml
+
+# Rust source and tests.
+!/src/**/*.rs
+!/tests/**/*.rs
+
+# Embedded resources shipped with the project.
+!/resources/Country.mmdb
+!/resources/mixin.yaml
+!/resources/zip/*.gz
+!/resources/zip/*.zip
+!/resources/zip/*.xz
+!/resources/zip/*.tar.gz
+
+# Build and release scripts.
+!/scripts/*.py
+!/scripts/*.sh
+
+# npm package metadata and launcher.
+!/npm/packages/*/
+!/npm/packages/*/README.md
+!/npm/packages/*/package.json
+!/npm/packages/openclash/bin/
+!/npm/packages/openclash/bin/openclash.js
+
+# PyPI package metadata and Python entrypoints.
+!/python/packages/*/
+!/python/packages/*/README.md
+!/python/packages/*/pyproject.toml
+!/python/packages/*/src/
+!/python/packages/*/src/*/
+!/python/packages/*/src/**/*.py
+
+# Always ignore local/editor/build artifacts, even inside allowed trees.
+.DS_Store
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+*.swp
+*.swo
+*.egg-info/
+build/
+dist/
+wheelhouse/
+target/
+node_modules/
+task_plan.md
+reference/

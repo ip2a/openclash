@@ -1,0 +1,77 @@
+name: release-publish-pypi
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: "Run ID of the release-build workflow"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Sync versions
+        run: uv run python scripts/sync_version.py
+
+      - name: Validate Python dependency versions
+        run: |
+          uv run python - <<'PY'
+          import re
+          import tomllib
+          from pathlib import Path
+
+          cargo_text = Path("Cargo.toml").read_text(encoding="utf-8")
+          version = re.search(r'^version\s*=\s*"([^"]+)"', cargo_text, flags=re.MULTILINE).group(1)
+          pyproject = tomllib.loads(Path("python/packages/openclash/pyproject.toml").read_text(encoding="utf-8"))
+          deps = pyproject["project"]["dependencies"]
+          matches = [dep for dep in deps if dep.startswith("openclash-bin-")]
+          if not matches:
+              raise SystemExit("No platform dependencies found in python/packages/openclash/pyproject.toml")
+          for dep in matches:
+              if f"=={version};" not in dep:
+                  raise SystemExit(f"Dependency version is out of sync: {dep!r}")
+          print(f"[ok] PyPI dependency versions are aligned: {version}")
+          PY
+
+      - name: Download release-build artifacts
+        run: |
+          mkdir -p dist
+          gh run download "${{ inputs.build_run_id }}" --name "openclash-linux-x64-musl" --dir "dist/linux-x64-musl"
+          gh run download "${{ inputs.build_run_id }}" --name "openclash-linux-arm64-musl" --dir "dist/linux-arm64-musl"
+          gh run download "${{ inputs.build_run_id }}" --name "openclash-darwin-arm64" --dir "dist/darwin-arm64"
+          gh run download "${{ inputs.build_run_id }}" --name "openclash-win32-ia32" --dir "dist/win32-ia32"
+
+      - name: Assemble PyPI platform packages
+        run: uv run python scripts/assemble_pypi_packages.py --dist-root dist
+
+      - name: Build all PyPI packages
+        run: |
+          mkdir -p wheelhouse
+          for pkg in python/packages/*; do
+            uv run --with build python -m build "$pkg" --sdist --wheel --outdir wheelhouse
+          done
+
+      - name: Validate package metadata
+        run: uv run --with twine python -m twine check wheelhouse/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/

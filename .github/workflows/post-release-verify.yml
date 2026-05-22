@@ -1,0 +1,69 @@
+name: post-release-verify
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Released version to verify (e.g., 0.1.0)"
+        required: true
+        type: string
+
+jobs:
+  verify-npm:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Verify npm install
+        shell: bash
+        run: |
+          npm install -g openclash@${{ inputs.version }}
+          INSTALLED_VERSION=$(openclash --version)
+          echo "Installed version: ${INSTALLED_VERSION}"
+          if [[ "${INSTALLED_VERSION}" != *"${{ inputs.version }}"* ]]; then
+            echo "[error] Version mismatch: expected ${{ inputs.version }}, got ${INSTALLED_VERSION}"
+            exit 1
+          fi
+          echo "[ok] npm install verification passed"
+
+  verify-pypi:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Verify PyPI install
+        shell: bash
+        run: |
+          uv tool install openclash==${{ inputs.version }}
+          INSTALLED_VERSION=$(openclash --version)
+          echo "Installed version: ${INSTALLED_VERSION}"
+          if [[ "${INSTALLED_VERSION}" != *"${{ inputs.version }}"* ]]; then
+            echo "[error] Version mismatch: expected ${{ inputs.version }}, got ${INSTALLED_VERSION}"
+            exit 1
+          fi
+          echo "[ok] PyPI install verification passed"
+
+  verify-crates:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify crates.io install
+        shell: bash
+        run: |
+          cargo install openclash --version ${{ inputs.version }}
+          INSTALLED_VERSION=$(openclash --version)
+          echo "Installed version: ${INSTALLED_VERSION}"
+          if [[ "${INSTALLED_VERSION}" != *"${{ inputs.version }}"* ]]; then
+            echo "[error] Version mismatch: expected ${{ inputs.version }}, got ${INSTALLED_VERSION}"
+            exit 1
+          fi
+          echo "[ok] crates.io install verification passed"
